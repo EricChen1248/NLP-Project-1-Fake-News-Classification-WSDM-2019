@@ -12,8 +12,8 @@ with open('cutTrainingData.csv', 'r') as csvFile:
         titles.append(row['title1'].split('/'))
         titles.append(row['title2'].split('/'))
         
-        if count >= 290_000:
-            break
+        # if count >= 290_000:
+        #     break
 
-model = Word2Vec(titles, size=80, window=2, min_count=10, workers=16)
+model = Word2Vec(titles, size=70, window=2, min_count=10, workers=16)
 model.save("word2vec_model")

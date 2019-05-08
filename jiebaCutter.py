@@ -3,18 +3,18 @@ import jieba
 
 print("====== Cutting Words =======")
 
-
 # jieba.enable_parallel(8)
 # jieba.load_userdict('dict.txt.big')
+stopWordFile = './Dictionaries/stopwords.txt'
 
 stopWords = []
-with open('stopwords.txt') as f:
+with open(stopWordFile) as f:
     for w in f:
         stopWords.append(w[:-1])
 stopWords = set(stopWords)
 '''
 
-jieba.analyse.set_stop_words('stopwords.txt')
+jieba.analyse.set_stop_words(stopWordFile)
 '''
 
 
@@ -30,13 +30,15 @@ count = 0
 with open('data/train.csv', 'r') as csvFile:
     with open('cutTrainingData.csv', 'w', newline='') as output:
         reader = csv.DictReader(csvFile, delimiter=',')
-        writer = csv.DictWriter(output, ['id', 'title1', 'title2', 'label'])
+        writer = csv.DictWriter(output, ['id', 'id1', 'id2', 'title1', 'title2', 'label'])
         writer.writeheader()
         for row in reader:
             count += 1
             w = writer.writerow(
             {
                 'id' : row['id'],
+                'id1' : row['tid1'],
+                'id2' : row['tid2'],
                 'title1' : '/'.join([word for word in filter(lambda x: x not in stopWords, filter(None, jieba.cut(row['title1_zh'].replace('\n', ''), cut_all=False)))]),
                 'title2' : '/'.join([word for word in filter(lambda x: x not in stopWords, filter(None, jieba.cut(row['title2_zh'].replace('\n', ''), cut_all=False)))]),
                 'label' : row['label']
@@ -44,3 +46,5 @@ with open('data/train.csv', 'r') as csvFile:
 
             pCount = count * 100 / length
             print(f"Cutting words: ({'#' * int(pCount)}{'-' * (100 - int(pCount))}) {pCount:.2f}%", end='\r') 
+
+print(' ' * 140)
