@@ -12,8 +12,8 @@ from fuzzywuzzy import fuzz
 import xgboost as xgb
 
 TRAIN_LABEL_PATH = "./label.npy" 
-TRAIN_FEATURE_PATH = "./feature_train.csv"
-TEST_FEATURE_PATH = "./feature_test.csv"
+TRAIN_FEATURE_PATH = "./concat_train.csv"
+TEST_FEATURE_PATH = "./concat_test.csv"
 
 
 
@@ -21,12 +21,12 @@ def load_data():
     # read features from csv file and label from npy
     df_trainX = pd.read_csv(TRAIN_FEATURE_PATH)
     df_testX = pd.read_csv(TEST_FEATURE_PATH)
+    df_trainX.EnglishNounScore.fillna(0, inplace=True)
+    df_trainX.EmbeddingScore.fillna(0, inplace=True)
     Y_train = np.load(TRAIN_LABEL_PATH)
     # transfer data type to ndarray or reshape data
     X_train = df_trainX.as_matrix()
-    X_train = X_train[:,1:]
     X_test = df_testX.as_matrix()
-    X_test = X_test[:,1:]
     Y_train = np.reshape(Y_train, (Y_train.shape[0], 1))
     # split validation data
     X_all, X_train, X_valid = X_train, X_train[:-32000], X_train[-32000:]
@@ -48,6 +48,7 @@ def predictor(Y_test, file_path):
     np_id = np.reshape(np_id, (np_id.shape[0], 1))
     result = np.array(result)
     result = np.reshape(result, (result.shape[0], 1))
+    print(np_id.shape, result.shape)
     out = np.concatenate((np_id, result), axis=1)
     out = pd.DataFrame(out, columns=["Id", "Category"])
     out.to_csv(file_path, index=False)
@@ -55,11 +56,14 @@ def predictor(Y_test, file_path):
 
 def decision_tree():
     decision_tree_clf = tree.DecisionTreeClassifier()
+    print(X_train.shape, Y_train.shape)
+    print(np.isnan(X_train).any())
     decision_tree_clf = decision_tree_clf.fit(X_train, Y_train)
     Y_valid_pred = decision_tree_clf.predict(X_valid)
     acc = accuracy_score(Y_valid, Y_valid_pred)
     decision_tree_clf = decision_tree_clf.fit(X_all, Y_all)
     Y_test = decision_tree_clf.predict(X_test)
+    print(X_test.shape)
     predictor(Y_test, "decision_tree_all.csv")
     # print(acc)
 
